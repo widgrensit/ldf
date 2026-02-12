@@ -7,14 +7,14 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    name: OTP ${{matrix.otp}}
+    name: OTP ${{matrix.otp}} / rebar3 ${{matrix.rebar3}}
     strategy:
       fail-fast: false
       matrix:
-        otp: [27.0]
-        rebar3: [3.24.0]
+        otp: ['28.0']
+        rebar3: ['3.26.0']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: erlef/setup-beam@v1
       with:
         otp-version: ${{matrix.otp}}
@@ -28,25 +28,3 @@ jobs:
       run: rebar3 xref
     - name: Run elvis
       run: rebar3 as lint lint
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-      with:
-        version: latest
-        buildkitd-flags: --debug
-    - name: Build and push
-      id: docker_build
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/widgrensit/ldf:latest
-    - name: Image digest
-      run: echo ${{ steps.docker_build.outputs.digest }}
