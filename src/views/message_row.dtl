@@ -1,1 +1,1 @@
-<tr{% if new %} class="new"{% endif %}><td class="mono-id">{{ ref }}</td><td class="msg">{{ payload }}</td></tr>
+<tr{% if new %} class="new"{% endif %}><td class="mono-id">{{ ref }}</td><td class="msg">{% if link %}<a href="{{ link }}" target="_blank" rel="noopener">{{ link }}</a>{% else %}{{ text }}{% endif %}</td></tr>
