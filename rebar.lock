@@ -8,7 +8,7 @@
   0},
  {<<"datastar_nova">>,
   {git,"https://github.com/Taure/datastar_nova.git",
-       {ref,"1671bbaa231990610cb7e2fec16e8c3d4e41cb5d"}},
+       {ref,"b9277e2d4170c2fc5365941c78b3051896ff6e01"}},
   0},
  {<<"erlydtl">>,{pkg,<<"erlydtl">>,<<"0.14.0">>},1},
  {<<"jhn_stdlib">>,{pkg,<<"jhn_stdlib">>,<<"5.11.2">>},1},
