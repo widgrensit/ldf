@@ -77,8 +77,8 @@ submit_history(Req0) ->
 
 %% --- published by the message API on each intercepted message -------------
 
-publish_message(MessageId, Payload) ->
-    Row = render(message_row_dtl, row_vars(ref(MessageId), Payload, true)),
+publish_message(_MessageId, Payload) ->
+    Row = render(message_row_dtl, row_vars(Payload, true)),
     datastar_nova:publish(?MESSAGES, [
         datastar:patch_elements(~"", #{selector => ~"#feed-empty", mode => remove}),
         datastar:patch_elements(Row, #{selector => ~"#messages", mode => append})
@@ -91,34 +91,74 @@ publish_message(MessageId, Payload) ->
 message_init([]) ->
     [datastar:patch_elements(feed_empty(), #{selector => ~"#messages", mode => inner})];
 message_init(Msgs) ->
-    Rows = [
-        render(
-            message_row_dtl,
-            row_vars(ref(maps:get(message_id, M, ~"")), maps:get(payload, M, ~""), false)
-        )
-     || M <- Msgs
-    ],
+    Rows = [render(message_row_dtl, row_vars(maps:get(payload, M, ~""), false)) || M <- Msgs],
     [datastar:patch_elements(Rows, #{selector => ~"#messages", mode => inner})].
 
 feed_empty() ->
-    ~"<tr id=\"feed-empty\"><td colspan=\"2\" class=\"empty\">Awaiting interception</td></tr>".
+    ~"<div id=\"feed-empty\" class=\"empty\">Awaiting interception</div>".
 
-%% The stored payload is the full encoded message; show its inner payload -
-%% an attachment URL becomes a clickable link, plain text stays text.
-row_vars(Ref, StoredPayload, New) ->
-    case display_payload(StoredPayload) of
-        {link, Url} -> [{ref, Ref}, {new, New}, {link, Url}, {text, ~""}];
-        {text, Text} -> [{ref, Ref}, {new, New}, {link, false}, {text, Text}]
+%% The stored payload is the full encoded message; expand every field for a
+%% structured record. The inner payload renders as text, or a clickable link
+%% for attachments.
+row_vars(StoredPayload, New) ->
+    case safe_decode(StoredPayload) of
+        Msg when is_map(Msg) ->
+            [{new, New} | fields(Msg)];
+        _ ->
+            [{new, New}, {text, StoredPayload}, {link, false} | blank_fields()]
     end.
 
-display_payload(StoredPayload) ->
-    try json:decode(StoredPayload) of
-        #{~"payload" := #{~"url" := Url}} when is_binary(Url) -> {link, public_url(Url)};
-        #{~"payload" := Text} when is_binary(Text) -> {text, Text};
-        _ -> {text, StoredPayload}
+fields(Msg) ->
+    SenderInfo = maps:get(~"sender_info", Msg, #{}),
+    Payload =
+        case maps:get(~"payload", Msg, ~"") of
+            #{~"url" := Url} when is_binary(Url) -> [{link, public_url(Url)}, {text, ~""}];
+            Text when is_binary(Text) -> [{link, false}, {text, Text}];
+            _ -> [{link, false}, {text, ~""}]
+        end,
+    [
+        {email, maps:get(~"email", SenderInfo, ~"")},
+        {phone, maps:get(~"phone_number", SenderInfo, ~"")},
+        {agent, maps:get(~"user_agent", SenderInfo, ~"")},
+        {time, fmt_time(maps:get(~"timestamp", Msg, undefined))},
+        {type, maps:get(~"type", Msg, ~"")},
+        {action, maps:get(~"action", Msg, ~"")},
+        {sender, short(maps:get(~"sender", Msg, ~""))},
+        {recipient, short(maps:get(~"to", Msg, ~""))},
+        {chat, short(maps:get(~"chat_id", Msg, ~""))},
+        {id, short(maps:get(~"id", Msg, ~""))}
+        | Payload
+    ].
+
+blank_fields() ->
+    [
+        {email, ~""},
+        {phone, ~""},
+        {agent, ~""},
+        {time, ~""},
+        {type, ~""},
+        {action, ~""},
+        {sender, ~""},
+        {recipient, ~""},
+        {chat, ~""},
+        {id, ~""}
+    ].
+
+safe_decode(Bin) ->
+    try json:decode(Bin) of
+        Decoded -> Decoded
     catch
-        _:_ -> {text, StoredPayload}
+        _:_ -> error
     end.
+
+fmt_time(Ms) when is_integer(Ms) ->
+    list_to_binary(calendar:system_time_to_rfc3339(Ms div 1000, [{offset, "Z"}]));
+fmt_time(_) ->
+    ~"".
+
+short(<<Eight:8/binary, _/binary>>) -> Eight;
+short(Bin) when is_binary(Bin) -> Bin;
+short(_) -> ~"".
 
 %% Rewrite an attachment URL onto the browser-reachable chatli host,
 %% regardless of which host got baked in when it was stored.
@@ -155,7 +195,3 @@ status_patch(Text) ->
 render(Mod, Vars) ->
     {ok, Html} = Mod:render(Vars),
     string:trim(iolist_to_binary(Html), trailing).
-
-ref(<<Short:8/binary, _/binary>>) -> Short;
-ref(MessageId) when is_binary(MessageId) -> MessageId;
-ref(_) -> ~"".
