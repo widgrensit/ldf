@@ -17,8 +17,12 @@ create_message(#{json := #{<<"id">> := MessageId} = Json}) ->
     logger:debug("message: ~p~n", [Message]),
     EncodedMessage = encode(Message),
     logger:debug("Encoded message: ~p~n", [EncodedMessage]),
-    ok = ldf_db:add_message(EncodedMessage, MessageId),
-    ldf_www_controller:publish_message(MessageId, EncodedMessage),
+    case ldf_db:add_message(EncodedMessage, MessageId) of
+        ok ->
+            ldf_www_controller:publish_message(MessageId, EncodedMessage);
+        {error, Reason} ->
+            logger:error("failed to store message ~s: ~p", [MessageId, Reason])
+    end,
     {status, 200}.
 
 get_message(#{parsed_qs := ParsedQS}) ->
