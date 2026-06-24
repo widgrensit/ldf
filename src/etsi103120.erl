@@ -517,4 +517,4 @@ hi1_identifier(CountryCode, Identifier) ->
     ].
 
 get_v4() ->
-    uuid:uuid_to_string(uuid:get_v4(), binary_standard).
+    jhn_uuid:gen(v4, [binary]).

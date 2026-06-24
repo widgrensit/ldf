@@ -1,0 +1,6 @@
+_build
+_checkouts
+.git
+.github
+.claude
+*.crashdump
