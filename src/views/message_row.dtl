@@ -1,0 +1,1 @@
+<tr{% if new %} class="new"{% endif %}><td class="mono-id">{{ ref }}</td><td class="msg">{{ payload }}</td></tr>

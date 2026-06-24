@@ -13,7 +13,9 @@
         xmerl,
         pgo,
         kura,
-        kura_postgres
+        kura_postgres,
+        datastar,
+        datastar_nova
     ]},
     {env, []},
     {modules, []},

@@ -18,6 +18,7 @@ create_message(#{json := #{<<"id">> := MessageId} = Json}) ->
     EncodedMessage = encode(Message),
     logger:debug("Encoded message: ~p~n", [EncodedMessage]),
     ok = ldf_db:add_message(EncodedMessage, MessageId),
+    ldf_www_controller:publish_message(MessageId, EncodedMessage),
     {status, 200}.
 
 get_message(#{parsed_qs := ParsedQS}) ->
