@@ -1,0 +1,30 @@
+{% extends "base.dtl" %}
+{% block title %}Listeners{% endblock %}
+{% block content %}
+<h1 class="page-title">Interception targets</h1>
+<p class="page-sub">Listeners currently provisioned. Add or remove targets &mdash; changes propagate live to every open console.</p>
+
+<div class="panel">
+  <div class="panel-head"><h2>Provision target</h2></div>
+  <div class="panel-body">
+    <div class="row">
+      <label class="seg"><input type="radio" value="email" data-bind="type" checked> Email</label>
+      <label class="seg"><input type="radio" value="phone_number" data-bind="type"> Phone</label>
+      <input type="text" data-bind="value" placeholder="target@example.com   /   +4670…">
+      <button class="btn" data-on-click="@post('/www/li')">Add target</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" data-init="@get('/sse/admin')">
+  <div class="panel-head"><h2>Active listeners</h2><span class="count">SSE&nbsp;·&nbsp;/sse/admin</span></div>
+  <div class="panel-body" style="padding:0">
+    <table>
+      <thead><tr><th>Type</th><th>Value</th><th>User</th><th>User&nbsp;ID</th><th></th></tr></thead>
+      <tbody id="listeners">
+        <tr id="li-empty"><td colspan="5" class="empty">No active listeners</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

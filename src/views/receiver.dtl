@@ -1,0 +1,21 @@
+{% extends "base.dtl" %}
+{% block title %}Receiver{% endblock %}
+{% block content %}
+<h1 class="page-title">Intercepted messages</h1>
+<p class="page-sub">Live feed of messages received from monitored targets &mdash; new entries stream in automatically, no refresh.</p>
+
+<div class="panel" data-init="@get('/sse/receiver')">
+  <div class="panel-head">
+    <h2>Message stream</h2>
+    <span class="count">SSE&nbsp;·&nbsp;/sse/receiver</span>
+  </div>
+  <div class="panel-body" style="padding:0">
+    <table class="feed">
+      <thead><tr><th>Reference</th><th>Payload</th></tr></thead>
+      <tbody id="messages">
+        <tr id="feed-empty"><td colspan="2" class="empty">Awaiting interception</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -69,11 +69,11 @@ add_message(Payload, MessageId) ->
     end.
 
 get_messages() ->
-    Q = kura_query:select(kura_query:from(ldf_message), [payload]),
+    Q = kura_query:select(kura_query:from(ldf_message), [message_id, payload]),
     ldf_repo:all(Q).
 
 get_message(MessageId) ->
-    Q0 = kura_query:select(kura_query:from(ldf_message), [payload]),
+    Q0 = kura_query:select(kura_query:from(ldf_message), [message_id, payload]),
     Q = kura_query:where(Q0, {message_id, MessageId}),
     ldf_repo:all(Q).
 
