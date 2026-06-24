@@ -8,10 +8,10 @@
   <div class="panel-head"><h2>Provision target</h2></div>
   <div class="panel-body">
     <div class="row">
-      <label class="seg"><input type="radio" value="email" data-bind="type" checked> Email</label>
-      <label class="seg"><input type="radio" value="phone_number" data-bind="type"> Phone</label>
-      <input type="text" data-bind="value" placeholder="target@example.com   /   +4670…">
-      <button class="btn" data-on-click="@post('/www/li')">Add target</button>
+      <label class="seg"><input type="radio" value="email" data-bind:type checked> Email</label>
+      <label class="seg"><input type="radio" value="phone_number" data-bind:type> Phone</label>
+      <input type="text" data-bind:value placeholder="target@example.com   /   +4670…">
+      <button class="btn" data-on:click="@post('/www/li')">Add target</button>
     </div>
   </div>
 </div>
