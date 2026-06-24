@@ -11,7 +11,9 @@
         runtime_tools,
         nova,
         xmerl,
-        pgo
+        pgo,
+        kura,
+        kura_postgres
     ]},
     {env, []},
     {modules, []},
