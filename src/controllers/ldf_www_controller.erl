@@ -106,12 +106,12 @@ feed_empty() ->
 %% The stored payload is the full encoded message; show its inner payload -
 %% an attachment URL becomes a clickable link, plain text stays text.
 row_vars(Ref, StoredPayload, New) ->
-    case display(StoredPayload) of
+    case display_payload(StoredPayload) of
         {link, Url} -> [{ref, Ref}, {new, New}, {link, Url}, {text, ~""}];
         {text, Text} -> [{ref, Ref}, {new, New}, {link, false}, {text, Text}]
     end.
 
-display(StoredPayload) ->
+display_payload(StoredPayload) ->
     try json:decode(StoredPayload) of
         #{~"payload" := #{~"url" := Url}} when is_binary(Url) -> {link, public_url(Url)};
         #{~"payload" := Text} when is_binary(Text) -> {text, Text};
