@@ -11,124 +11,74 @@
     get_message/1
 ]).
 
+-include_lib("kura/include/kura.hrl").
+
 get_all_li() ->
-    SQL = <<"SELECT * FROM li">>,
-    query(SQL, []).
+    ldf_repo:all(kura_query:from(li)).
 
 get_li_user_id(UserId) ->
-    SQL = <<"SELECT * FROM li WHERE user_id = $1">>,
-    query1(SQL, [UserId]).
+    find_by(li, user_id, UserId).
 
 find_li(phone_number, PhoneNumber) ->
-    SQL = <<"SELECT * FROM li WHERE phone_number = $1">>,
-    query1(SQL, [PhoneNumber]);
+    find_by(li, phone_number, PhoneNumber);
 find_li(email, Email) ->
-    SQL = <<"SELECT * FROM li where email = $1">>,
-    query1(SQL, [Email]).
+    find_by(li, email, Email).
 
 add_li(Type, Value, CallbackId, UserId, Username, PhoneNumber, Email) ->
-    PhoneLi =
-        case find_li(phone_number, PhoneNumber) of
-            {ok, Li2} -> Li2;
-            undefined -> undefined
-        end,
-    EmailLi =
-        case find_li(email, Email) of
-            {ok, Li} -> Li;
-            undefined -> undefined
-        end,
-    case {PhoneLi, EmailLi} of
+    case {find_li(phone_number, PhoneNumber), find_li(email, Email)} of
         {undefined, undefined} ->
-            SQL =
-                <<
-                    "INSERT INTO li (type,\n"
-                    "                                       value,\n"
-                    "                                       callback_id,\n"
-                    "                                       user_id,\n"
-                    "                                       username,\n"
-                    "                                       phone_number,\n"
-                    "                                       email)\n"
-                    "                        VALUES ($1, $2, $3, $4, $5, $6, $7)"
-                >>,
-            query1(SQL, [Type, Value, CallbackId, UserId, Username, PhoneNumber, Email]);
+            CS = kura_changeset:cast(
+                li,
+                #{},
+                #{
+                    <<"type">> => Type,
+                    <<"value">> => Value,
+                    <<"callback_id">> => CallbackId,
+                    <<"user_id">> => UserId,
+                    <<"username">> => Username,
+                    <<"phone_number">> => PhoneNumber,
+                    <<"email">> => Email
+                },
+                [type, value, callback_id, user_id, username, phone_number, email]
+            ),
+            case ldf_repo:insert(CS) of
+                {ok, _} -> ok;
+                {error, _} = Error -> Error
+            end;
         _ ->
             ok
     end.
 
-remove_li(Id) ->
-    SQL = <<"DELETE FROM li WHERE callback_id = $1">>,
-    query1(SQL, [Id]).
-
-add_message(Payload, MessageId) ->
-    SQL = <<"INSERT INTO ldf_message (payload, message_id) VALUES ($1, $2)">>,
-    query1(SQL, [Payload, MessageId]).
-
-get_messages() ->
-    SQL = <<"SELECT payload FROM ldf_message">>,
-    query(SQL, []).
-
-get_message(MessageId) ->
-    SQL = <<"SELECT payload FROM ldf_message WHERE message_id=$1">>,
-    query(SQL, [MessageId]).
-
-% Expect 1 result
-query1(SQL, Values) ->
-    case pgo:query(SQL, Values) of
-        #{
-            command := insert,
-            num_rows := 1
-        } ->
-            ok;
-        #{
-            command := select,
-            rows := []
-        } ->
-            undefined;
-        #{
-            command := select,
-            rows := [Row]
-        } ->
-            {ok, Row};
-        #{
-            command := update,
-            num_rows := Num
-        } ->
-            {ok, Num};
-        #{
-            command := delete,
-            num_rows := 1
-        } ->
-            ok;
-        #{command := delete} ->
-            undefined;
-        {error, Error} ->
-            logger:error("Error: ~p on SQL ~p Values ~p", [Error, SQL, Values]),
-            {error, Error}
+remove_li(CallbackId) ->
+    Q = kura_query:where(kura_query:from(li), {callback_id, CallbackId}),
+    case ldf_repo:delete_all(Q) of
+        {ok, _} -> ok;
+        {error, _} = Error -> Error
     end.
 
-query(SQL, Values) ->
-    case pgo:query(SQL, Values) of
-        #{
-            command := insert,
-            num_rows := Num
-        } ->
-            {ok, Num};
-        #{
-            command := select,
-            rows := Rows
-        } ->
-            {ok, Rows};
-        #{
-            command := update,
-            num_rows := Num
-        } ->
-            {ok, Num};
-        #{
-            command := delete,
-            num_rows := Num
-        } ->
-            {ok, Num};
-        {error, Error} ->
-            logger:error("Error: ~p on SQL ~p Values ~p", [Error, SQL, Values]),
-            {error, Error}
+add_message(Payload, MessageId) ->
+    CS = kura_changeset:cast(
+        ldf_message,
+        #{},
+        #{<<"payload">> => Payload, <<"message_id">> => MessageId},
+        [payload, message_id]
+    ),
+    case ldf_repo:insert(CS) of
+        {ok, _} -> ok;
+        {error, _} = Error -> Error
+    end.
+
+get_messages() ->
+    Q = kura_query:select(kura_query:from(ldf_message), [payload]),
+    ldf_repo:all(Q).
+
+get_message(MessageId) ->
+    Q0 = kura_query:select(kura_query:from(ldf_message), [payload]),
+    Q = kura_query:where(Q0, {message_id, MessageId}),
+    ldf_repo:all(Q).
+
+find_by(Schema, Field, Value) ->
+    case ldf_repo:get_by(Schema, [{Field, Value}]) of
+        {ok, Row} -> {ok, Row};
+        {error, not_found} -> undefined
     end.

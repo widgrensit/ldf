@@ -4,7 +4,7 @@ Erlang/OTP service for managing listener information and converting messages to 
 
 ## Stack
 - Erlang/OTP, Nova framework, Cowboy
-- PostgreSQL via pgo
+- PostgreSQL via kura (kura_postgres backend)
 - ETSI 103120 and ETSI 103707 JSON-to-XML conversion
 
 ## Build & run

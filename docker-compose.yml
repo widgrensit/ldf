@@ -1,0 +1,14 @@
+# Use postgres/example user/password credentials
+services:
+  db:
+    image: postgres:17-alpine
+    command: -c 'max_connections=2000'
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ldf
+    ports:
+      - 5555:5432
+  adminer:
+    image: adminer
+    ports:
+      - 8082:8080
