@@ -126,6 +126,8 @@ tbody tr:last-child td { border-bottom: none; }
 /* live message feed */
 .feed td:first-child { color: var(--faint); white-space: nowrap; width: 1%; }
 .msg { font-family: var(--mono); color: var(--text); word-break: break-word; }
+.msg a { color: var(--live); text-decoration: none; border-bottom: 1px dotted var(--live-dim); word-break: break-all; }
+.msg a:hover { border-bottom-style: solid; }
 @keyframes flashin {
   0% { background: rgba(46,230,166,.16); transform: translateY(-3px); opacity: 0; }
   100% { background: transparent; transform: none; opacity: 1; }

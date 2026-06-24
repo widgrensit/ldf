@@ -8,7 +8,7 @@ create_message(#{json := #{<<"id">> := MessageId} = Json}) ->
     Message =
         case Json of
             #{<<"payload">> := #{<<"url">> := Url} = Payload} ->
-                {ok, ChatliPath} = application:get_env(ldf, chatli_path),
+                {ok, ChatliPath} = application:get_env(ldf, chatli_public_path),
                 Payload2 = maps:update(<<"url">>, <<ChatliPath/binary, "/", Url/binary>>, Payload),
                 maps:update(<<"payload">>, Payload2, Json);
             _ ->

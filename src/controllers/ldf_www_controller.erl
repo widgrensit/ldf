@@ -78,7 +78,7 @@ submit_history(Req0) ->
 %% --- published by the message API on each intercepted message -------------
 
 publish_message(MessageId, Payload) ->
-    Row = render(message_row_dtl, [{ref, ref(MessageId)}, {payload, Payload}, {new, true}]),
+    Row = render(message_row_dtl, row_vars(ref(MessageId), Payload, true)),
     datastar_nova:publish(?MESSAGES, [
         datastar:patch_elements(~"", #{selector => ~"#feed-empty", mode => remove}),
         datastar:patch_elements(Row, #{selector => ~"#messages", mode => append})
@@ -86,21 +86,50 @@ publish_message(MessageId, Payload) ->
 
 %% --- helpers --------------------------------------------------------------
 
+%% Replace (not append) the whole list on connect, so reconnects re-sync
+%% instead of duplicating the batch. Live messages still append.
 message_init([]) ->
-    [];
+    [datastar:patch_elements(feed_empty(), #{selector => ~"#messages", mode => inner})];
 message_init(Msgs) ->
     Rows = [
-        render(message_row_dtl, [
-            {ref, ref(maps:get(message_id, M, ~""))},
-            {payload, maps:get(payload, M, ~"")},
-            {new, false}
-        ])
+        render(
+            message_row_dtl,
+            row_vars(ref(maps:get(message_id, M, ~"")), maps:get(payload, M, ~""), false)
+        )
      || M <- Msgs
     ],
-    [
-        datastar:patch_elements(~"", #{selector => ~"#feed-empty", mode => remove}),
-        datastar:patch_elements(Rows, #{selector => ~"#messages", mode => append})
-    ].
+    [datastar:patch_elements(Rows, #{selector => ~"#messages", mode => inner})].
+
+feed_empty() ->
+    ~"<tr id=\"feed-empty\"><td colspan=\"2\" class=\"empty\">Awaiting interception</td></tr>".
+
+%% The stored payload is the full encoded message; show its inner payload -
+%% an attachment URL becomes a clickable link, plain text stays text.
+row_vars(Ref, StoredPayload, New) ->
+    case display_payload(StoredPayload) of
+        {link, Url} -> [{ref, Ref}, {new, New}, {link, Url}, {text, ~""}];
+        {text, Text} -> [{ref, Ref}, {new, New}, {link, false}, {text, Text}]
+    end.
+
+display_payload(StoredPayload) ->
+    try json:decode(StoredPayload) of
+        #{~"payload" := #{~"url" := Url}} when is_binary(Url) -> {link, public_url(Url)};
+        #{~"payload" := Text} when is_binary(Text) -> {text, Text};
+        _ -> {text, StoredPayload}
+    catch
+        _:_ -> {text, StoredPayload}
+    end.
+
+%% Rewrite an attachment URL onto the browser-reachable chatli host,
+%% regardless of which host got baked in when it was stored.
+public_url(Url) ->
+    case binary:split(Url, ~"/chat/") of
+        [_Host, Rest] ->
+            {ok, Public} = application:get_env(ldf, chatli_public_path),
+            <<Public/binary, "/chat/", Rest/binary>>;
+        _ ->
+            Url
+    end.
 
 broadcast_listeners() ->
     {ok, Listeners} = ldf_db:get_all_li(),
