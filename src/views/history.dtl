@@ -13,7 +13,7 @@
       <input type="text" data-bind:value placeholder="target@example.com">
     </div>
     <div class="row" style="margin-top:12px">
-      <input type="datetime-local" step="1" data-bind:timestamp>
+      <input type="datetime-local" step="1" lang="sv-SE" data-bind:timestamp>
       <button class="btn" data-on:click="@post('/www/history')">Submit request</button>
     </div>
     <p class="hint">Replays messages from this point in time onward (UTC).</p>
