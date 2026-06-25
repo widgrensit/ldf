@@ -67,11 +67,11 @@ remove_listener(#{bindings := #{~"callbackid" := CallbackId}}) ->
 submit_history(Req0) ->
     case datastar_nova:read_signals(Req0) of
         {{ok, #{~"type" := Type, ~"value" := Value} = Signals}, _Req} when Value =/= ~"" ->
-            Timestamp = ldf_format:datetime_to_ms(maps:get(~"timestamp", Signals, ~"")),
+            Timestamp = maps:get(~"timestamp_ms", Signals, 0),
             ldf_srv:get_history(
                 thoas:encode(#{type => Type, value => Value, timestamp => Timestamp})
             ),
-            status_patch(~"Request submitted.");
+            status_patch(~"Request submitted - matching messages appear in the Receiver tab.");
         _ ->
             status_patch(~"Target type and value are required.")
     end.
