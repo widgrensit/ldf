@@ -89,12 +89,14 @@ body::after {
 label.seg { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--dim); cursor: pointer; font-size: 12px; }
 label.seg:has(input:checked) { color: var(--live); border-color: var(--live-dim); background: rgba(46,230,166,.05); }
 input[type=radio] { accent-color: var(--live); }
-input[type=text] {
+input[type=text], input[type="datetime-local"] {
   flex: 1; min-width: 220px; background: var(--bg); border: 1px solid var(--line);
   color: var(--text); font-family: var(--mono); font-size: 13px; padding: 10px 12px; border-radius: 4px;
 }
-input[type=text]:focus { outline: none; border-color: var(--live-dim); box-shadow: 0 0 0 3px rgba(46,230,166,.12); }
+input[type="datetime-local"] { color-scheme: dark; }
+input[type=text]:focus, input[type="datetime-local"]:focus { outline: none; border-color: var(--live-dim); box-shadow: 0 0 0 3px rgba(46,230,166,.12); }
 input::placeholder { color: var(--faint); }
+.hint { color: var(--faint); font-size: 11px; margin: 8px 0 0; }
 
 .btn {
   font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
@@ -149,6 +151,17 @@ tbody tr.new { animation: flashin .7s ease-out; }
 .rec-meta { display: flex; flex-wrap: wrap; gap: 5px 18px; font-size: 10.5px; color: var(--dim); }
 .rec-meta i { color: var(--faint); font-style: normal; text-transform: uppercase; letter-spacing: .08em; margin-right: 6px; }
 .rec-meta .rec-agent { flex-basis: 100%; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* per-message ETSI conversion */
+.rec-etsi { display: flex; gap: 8px; margin-top: 10px; }
+.etsi-btn { padding: 5px 11px; font-size: 10.5px; letter-spacing: .08em; }
+.etsi:empty { display: none; }
+.etsi-bar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.etsi-label { color: var(--live); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; }
+.etsi-label.etsi-err { color: var(--danger); }
+.etsi-hide { margin-left: auto; padding: 4px 10px; font-size: 10.5px; }
+.etsi-pre { margin: 8px 0 0; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; max-height: 360px; overflow: auto; font-size: 11.5px; line-height: 1.45; white-space: pre; }
+.etsi-pre code { color: var(--text); }
 
 .empty { padding: 40px 18px; text-align: center; color: var(--faint); font-size: 12.5px; }
 .empty::before { content: "▱ "; color: var(--live-dim); }
