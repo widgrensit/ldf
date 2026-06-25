@@ -197,7 +197,10 @@ etsi_block(Format, MessageId, EscapedXml) ->
     iolist_to_binary([
         ~"<div class=\"etsi-bar\"><span class=\"etsi-label\">ETSI ",
         Format,
-        ~"</span><button class=\"btn-ghost etsi-hide\" data-on:click=\"@get('/www/message/",
+        ~"</span><button class=\"etsi-btn etsi-copy\" data-on:click=\"",
+        ~"navigator.clipboard.writeText(el.closest('.etsi').querySelector('code').textContent);",
+        ~"el.textContent='copied';setTimeout(()=>el.textContent='copy',1200)\">copy</button>",
+        ~"<button class=\"btn-ghost etsi-hide\" data-on:click=\"@get('/www/message/",
         MessageId,
         ~"/hide')\">hide</button></div><pre class=\"etsi-pre\"><code>",
         EscapedXml,

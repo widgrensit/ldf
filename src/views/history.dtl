@@ -10,10 +10,10 @@
     <div class="row">
       <label class="seg"><input type="radio" value="email" data-bind:type checked> Email</label>
       <label class="seg"><input type="radio" value="phone_number" data-bind:type> Phone</label>
-      <input type="text" data-bind:value placeholder="target@example.com">
+      <input type="text" data-bind:value placeholder="target@example.com" data-on:keydown="evt.key === 'Enter' && @post('/www/history')">
     </div>
     <div class="row" style="margin-top:12px">
-      <input type="datetime-local" step="1" data-bind:timestamp>
+      <input type="datetime-local" step="1" lang="sv-SE" data-bind:timestamp>
       <button class="btn" data-on:click="@post('/www/history')">Submit request</button>
     </div>
     <p class="hint">Replays messages from this point in time onward (UTC).</p>
