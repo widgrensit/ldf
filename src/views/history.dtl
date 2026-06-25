@@ -4,7 +4,7 @@
 <h1 class="page-title">History submission</h1>
 <p class="page-sub">Replay stored messages for a target as historic interception, from a given timestamp.</p>
 
-<div class="panel">
+<div class="panel" data-signals="{timestamp_ms: 0}">
   <div class="panel-head"><h2>Submit history request</h2></div>
   <div class="panel-body">
     <div class="row">
@@ -13,10 +13,10 @@
       <input type="text" data-bind:value placeholder="target@example.com" data-on:keydown="evt.key === 'Enter' && @post('/www/history')">
     </div>
     <div class="row" style="margin-top:12px">
-      <input type="datetime-local" step="1" lang="sv-SE" data-bind:timestamp>
+      <input type="datetime-local" step="1" lang="sv-SE" data-bind:timestamp data-on:change="$timestamp_ms = el.value ? (new Date(el.value).getTime() || 0) : 0">
       <button class="btn" data-on:click="@post('/www/history')">Submit request</button>
     </div>
-    <p class="hint">Replays messages from this point in time onward (UTC).</p>
+    <p class="hint">Requires an active listener for this target &mdash; add one on the <a href="/www/admin">Listeners</a> tab first. Matching messages replay into the <a href="/www/receiver">Receiver</a> tab, from the chosen local time onward.</p>
     <div id="hist-status" style="margin-top:16px;color:var(--dim);font-size:12.5px">&nbsp;</div>
   </div>
 </div>

@@ -16,18 +16,3 @@ pretty_xml_with_prolog_test() ->
 
 html_escape_test() ->
     ?assertEqual(~"&lt;a&gt;&amp;b", ldf_format:html_escape(~"<a>&b")).
-
-datetime_to_ms_with_seconds_test() ->
-    Expected =
-        (calendar:datetime_to_gregorian_seconds({{2024, 6, 25}, {15, 0, 30}}) - 62167219200) *
-            1000,
-    ?assertEqual(Expected, ldf_format:datetime_to_ms(~"2024-06-25T15:00:30")).
-
-datetime_to_ms_without_seconds_test() ->
-    Expected =
-        (calendar:datetime_to_gregorian_seconds({{2024, 6, 25}, {15, 0, 0}}) - 62167219200) *
-            1000,
-    ?assertEqual(Expected, ldf_format:datetime_to_ms(~"2024-06-25T15:00")).
-
-datetime_to_ms_empty_test() ->
-    ?assertEqual(0, ldf_format:datetime_to_ms(~"")).

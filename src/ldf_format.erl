@@ -1,6 +1,6 @@
 -module(ldf_format).
 
--export([pretty_xml/1, html_escape/1, datetime_to_ms/1]).
+-export([pretty_xml/1, html_escape/1]).
 
 pretty_xml(Xml) ->
     Spaced = binary:replace(Xml, ~"><", ~">\n<", [global]),
@@ -38,20 +38,3 @@ html_escape(Bin) ->
     Amp = binary:replace(Bin, ~"&", ~"&amp;", [global]),
     Lt = binary:replace(Amp, ~"<", ~"&lt;", [global]),
     binary:replace(Lt, ~">", ~"&gt;", [global]).
-
-datetime_to_ms(
-    <<Y:4/binary, "-", Mo:2/binary, "-", D:2/binary, "T", H:2/binary, ":", Mi:2/binary, Rest/binary>>
-) ->
-    Seconds =
-        case Rest of
-            <<":", S:2/binary>> -> binary_to_integer(S);
-            _ -> 0
-        end,
-    DateTime = {
-        {binary_to_integer(Y), binary_to_integer(Mo), binary_to_integer(D)},
-        {binary_to_integer(H), binary_to_integer(Mi), Seconds}
-    },
-    Epoch = 62167219200,
-    (calendar:datetime_to_gregorian_seconds(DateTime) - Epoch) * 1000;
-datetime_to_ms(_) ->
-    0.
