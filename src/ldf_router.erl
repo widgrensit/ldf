@@ -11,6 +11,9 @@ routes(_Env) ->
                 {"/receiver", fun ldf_receiver_controller:create_message/1, #{methods => [post]}},
                 {"/receiver", fun ldf_receiver_controller:get_message/1, #{methods => [get]}},
                 {"/message/:messageid", fun ldf_message_controller:message/1, #{methods => [get]}},
+                {"/www/message/:messageid/:format", fun ldf_www_controller:message_etsi/1, #{
+                    methods => [get]
+                }},
                 {"/li", fun ldf_li_controller:create_li/1, #{methods => [post]}},
                 {"/li", fun ldf_li_controller:manage_li/1, #{methods => [get]}},
                 {"/history", fun ldf_li_controller:manage_history/1, #{methods => [post]}},

@@ -12,6 +12,7 @@
     add_listener/1,
     remove_listener/1,
     submit_history/1,
+    message_etsi/1,
     publish_message/2
 ]).
 
@@ -66,7 +67,7 @@ remove_listener(#{bindings := #{~"callbackid" := CallbackId}}) ->
 submit_history(Req0) ->
     case datastar_nova:read_signals(Req0) of
         {{ok, #{~"type" := Type, ~"value" := Value} = Signals}, _Req} when Value =/= ~"" ->
-            Timestamp = maps:get(~"timestamp", Signals, ~""),
+            Timestamp = ldf_format:datetime_to_ms(maps:get(~"timestamp", Signals, ~"")),
             ldf_srv:get_history(
                 thoas:encode(#{type => Type, value => Value, timestamp => Timestamp})
             ),
@@ -74,6 +75,22 @@ submit_history(Req0) ->
         _ ->
             status_patch(~"Target type and value are required.")
     end.
+
+%% Convert a stored message to the requested ETSI XML and inject it, pretty
+%% printed, under its row. Any other format (e.g. "hide") clears the block.
+message_etsi(#{bindings := #{~"messageid" := MessageId, ~"format" := Format}}) when
+    Format =:= ~"103707"; Format =:= ~"103120"
+->
+    Block =
+        case ldf_db:get_message(MessageId) of
+            {ok, [#{payload := Payload} | _]} ->
+                render_etsi(Format, MessageId, safe_decode(Payload));
+            _ ->
+                etsi_error(~"Message not found.")
+        end,
+    {datastar, [patch_xml(MessageId, Block)]};
+message_etsi(#{bindings := #{~"messageid" := MessageId}}) ->
+    {datastar, [patch_xml(MessageId, ~"")]}.
 
 %% --- published by the message API on each intercepted message -------------
 
@@ -126,7 +143,8 @@ fields(Msg) ->
         {sender, short(maps:get(~"sender", Msg, ~""))},
         {recipient, short(maps:get(~"to", Msg, ~""))},
         {chat, short(maps:get(~"chat_id", Msg, ~""))},
-        {id, short(maps:get(~"id", Msg, ~""))}
+        {id, short(maps:get(~"id", Msg, ~""))},
+        {full_id, maps:get(~"id", Msg, ~"")}
         | Payload
     ].
 
@@ -141,7 +159,8 @@ blank_fields() ->
         {sender, ~""},
         {recipient, ~""},
         {chat, ~""},
-        {id, ~""}
+        {id, ~""},
+        {full_id, ~""}
     ].
 
 safe_decode(Bin) ->
@@ -155,6 +174,40 @@ fmt_time(Ms) when is_integer(Ms) ->
     list_to_binary(calendar:system_time_to_rfc3339(Ms div 1000, [{offset, "Z"}]));
 fmt_time(_) ->
     ~"".
+
+patch_xml(MessageId, Block) ->
+    datastar:patch_elements(Block, #{selector => <<"#xml-", MessageId/binary>>, mode => inner}).
+
+render_etsi(Format, MessageId, Msg) when is_map(Msg) ->
+    try to_etsi(Format, Msg) of
+        Xml ->
+            etsi_block(Format, MessageId, ldf_format:html_escape(ldf_format:pretty_xml(Xml)))
+    catch
+        _:_ -> etsi_error(~"Could not convert this message.")
+    end;
+render_etsi(_Format, _MessageId, _Msg) ->
+    etsi_error(~"Malformed message payload.").
+
+to_etsi(~"103120", Msg) ->
+    etsi103120:json_to_xml(Msg, ~"undefined", ~"undefined", ~"undefined");
+to_etsi(_, Msg) ->
+    etsi103707:json_to_xml(Msg).
+
+etsi_block(Format, MessageId, EscapedXml) ->
+    iolist_to_binary([
+        ~"<div class=\"etsi-bar\"><span class=\"etsi-label\">ETSI ",
+        Format,
+        ~"</span><button class=\"btn-ghost etsi-hide\" data-on:click=\"@get('/www/message/",
+        MessageId,
+        ~"/hide')\">hide</button></div><pre class=\"etsi-pre\"><code>",
+        EscapedXml,
+        ~"</code></pre>"
+    ]).
+
+etsi_error(Text) ->
+    iolist_to_binary([
+        ~"<div class=\"etsi-bar\"><span class=\"etsi-label etsi-err\">", Text, ~"</span></div>"
+    ]).
 
 short(<<Eight:8/binary, _/binary>>) -> Eight;
 short(Bin) when is_binary(Bin) -> Bin;
