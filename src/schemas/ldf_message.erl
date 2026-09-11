@@ -7,9 +7,10 @@
 
 table() -> ~"ldf_message".
 
-fields() -> [
-    #kura_field{name = id, type = id, primary_key = true},
-    #kura_field{name = message_id, type = uuid, nullable = false},
-    #kura_field{name = payload, type = text},
-    #kura_field{name = content_length, type = string}
-].
+fields() ->
+    [
+        #kura_field{name = id, type = id, primary_key = true},
+        #kura_field{name = message_id, type = uuid, nullable = false},
+        #kura_field{name = payload, type = text},
+        #kura_field{name = content_length, type = string}
+    ].
