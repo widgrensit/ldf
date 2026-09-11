@@ -1,5 +1,5 @@
 # Build stage 0
-FROM erlang:27.0.1.0-alpine
+FROM erlang:28.3.1.0-alpine
 
 # Set working directory
 RUN mkdir /buildroot
@@ -12,7 +12,7 @@ RUN apk add --update git
 RUN rebar3 release
 
 # Build stage 1
-FROM alpine
+FROM alpine:3.23
 
 # Install some libs
 RUN apk add --no-cache openssl && \
