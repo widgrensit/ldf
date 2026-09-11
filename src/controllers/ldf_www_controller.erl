@@ -71,7 +71,7 @@ submit_history(Req0) ->
             ldf_srv:get_history(
                 thoas:encode(#{type => Type, value => Value, timestamp => Timestamp})
             ),
-            status_patch(~"Request submitted - matching messages appear in the Receiver tab.");
+            status_patch(~"Request submitted - matching messages appear in the Monitor tab.");
         _ ->
             status_patch(~"Target type and value are required.")
     end.

@@ -12,9 +12,9 @@
     <header class="topbar">
       <div class="brand"><b>LDF</b><span>ETSI&nbsp;103707</span></div>
       <nav class="nav">
-        <a href="/www/receiver"{% if active == "receiver" %} class="active"{% endif %}>Receiver</a>
-        <a href="/www/admin"{% if active == "admin" %} class="active"{% endif %}>Listeners</a>
-        <a href="/www/history"{% if active == "history" %} class="active"{% endif %}>History</a>
+        <a href="/www/receiver"{% if active == "receiver" %} class="active"{% endif %}>Monitor</a>
+        <a href="/www/admin"{% if active == "admin" %} class="active"{% endif %}>Admin</a>
+        <a href="/www/history"{% if active == "history" %} class="active"{% endif %}>Retained messages</a>
       </nav>
       <div class="live-pill">{% if live %}<span class="dot"></span> Stream live{% else %}Standby{% endif %}</div>
     </header>
