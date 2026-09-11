@@ -1,5 +1,5 @@
 {% extends "base.dtl" %}
-{% block title %}Listeners{% endblock %}
+{% block title %}Admin{% endblock %}
 {% block content %}
 <h1 class="page-title">Interception targets</h1>
 <p class="page-sub">Listeners currently provisioned. Add or remove targets &mdash; changes propagate live to every open console.</p>

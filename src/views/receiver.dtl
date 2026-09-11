@@ -1,5 +1,5 @@
 {% extends "base.dtl" %}
-{% block title %}Receiver{% endblock %}
+{% block title %}Monitor{% endblock %}
 {% block content %}
 <h1 class="page-title">Intercepted messages</h1>
 <p class="page-sub">Live feed of messages received from monitored targets &mdash; new entries stream in automatically, no refresh.</p>
