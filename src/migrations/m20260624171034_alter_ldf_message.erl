@@ -6,12 +6,16 @@
 
 -spec up() -> [kura_migration:operation()].
 up() ->
-    [{alter_table, ~"ldf_message", [
-        {modify_column, payload, text}
-    ]}].
+    [
+        {alter_table, ~"ldf_message", [
+            {modify_column, payload, text}
+        ]}
+    ].
 
 -spec down() -> [kura_migration:operation()].
 down() ->
-    [{alter_table, ~"ldf_message", [
-        {modify_column, payload, string}
-    ]}].
+    [
+        {alter_table, ~"ldf_message", [
+            {modify_column, payload, string}
+        ]}
+    ].
