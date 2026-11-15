@@ -1,6 +1,7 @@
 -module(ldf_www_controller_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("nova/include/nova_pubsub.hrl").
 
 -define(MESSAGE_ID, ~"1e87fd7c-de4f-4e97-be27-2bdcdbad23b7").
 
@@ -31,6 +32,31 @@ message_id_that_is_not_a_uuid_is_not_found_test_() ->
         Format <- [~"hide", ~"103707", ~"103120"]
     ].
 
+line_breaks_in_a_message_text_stay_inside_the_row_event_test() ->
+    ok = nova_pubsub:start(),
+    ok = nova_pubsub:join(ldf_messages),
+    Message = #{~"id" => ?MESSAGE_ID, ~"payload" => ~"one\r\ntwo\rthree\nfour"},
+    ldf_www_controller:publish_message(?MESSAGE_ID, iolist_to_binary(json:encode(Message))),
+    Stream =
+        receive
+            #nova_pubsub{channel = ldf_messages, payload = Events} -> iolist_to_binary(Events)
+        after 1000 -> error(nothing_published)
+        end,
+    nova_pubsub:leave(ldf_messages),
+    [Placeholder, Row] = sse_events(Stream),
+    ?assertEqual([~"data", ~"event"], field_names(Placeholder)),
+    ?assertEqual([~"#feed-empty"], data(~"selector", Placeholder)),
+    ?assertEqual([~"data", ~"event"], field_names(Row)),
+    ?assertEqual([~"#messages"], data(~"selector", Row)),
+    ?assertEqual([~"append"], data(~"mode", Row)),
+    Html = elements(Row),
+    ?assertMatch({0, _}, binary:match(Html, ~"<div class=\"rec new\">")),
+    ?assertMatch(
+        {_, _},
+        binary:match(Html, ~"<div class=\"rec-body\">one\ntwo\nthree\nfour</div>")
+    ),
+    ?assertEqual(~"class=\"etsi\"></div></div>", binary:part(Html, byte_size(Html), -25)).
+
 request(MessageId, Format) ->
     #{bindings => #{~"messageid" => MessageId, ~"format" => Format}}.
 
@@ -56,9 +82,17 @@ field(Line) ->
         [Name] -> {Name, ~""}
     end.
 
+field_names(Event) ->
+    lists:usort([Name || {Name, _Value} <- Event]).
+
 -spec data(binary(), [{binary(), binary()}]) -> [binary()].
 data(Kind, Event) ->
     [
         Rest
      || {~"data", Value} <- Event, [Found, Rest] <- [binary:split(Value, ~" ")], Found =:= Kind
     ].
+
+-spec elements([{binary(), binary()}]) -> binary().
+elements(Event) ->
+    Data = iolist_to_binary([[Line, $\n] || Line <- data(~"elements", Event)]),
+    binary:part(Data, 0, byte_size(Data) - 1).
