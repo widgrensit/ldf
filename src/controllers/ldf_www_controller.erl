@@ -78,19 +78,36 @@ submit_history(Req0) ->
 
 %% Convert a stored message to the requested ETSI XML and inject it, pretty
 %% printed, under its row. Any other format (e.g. "hide") clears the block.
-message_etsi(#{bindings := #{~"messageid" := MessageId, ~"format" := Format}}) when
-    Format =:= ~"103707"; Format =:= ~"103120"
-->
-    Block =
-        case ldf_db:get_message(MessageId) of
-            {ok, [#{payload := Payload} | _]} ->
-                render_etsi(Format, MessageId, safe_decode(Payload));
-            _ ->
-                etsi_error(~"Message not found.")
-        end,
-    {datastar, [patch_xml(MessageId, Block)]};
-message_etsi(#{bindings := #{~"messageid" := MessageId}}) ->
-    {datastar, [patch_xml(MessageId, ~"")]}.
+message_etsi(#{bindings := #{~"messageid" := MessageId, ~"format" := Format}}) ->
+    case is_message_id(MessageId) of
+        true -> {datastar, [patch_xml(MessageId, etsi_content(Format, MessageId))]};
+        false -> {status, 404}
+    end.
+
+etsi_content(Format, MessageId) when Format =:= ~"103707"; Format =:= ~"103120" ->
+    case ldf_db:get_message(MessageId) of
+        {ok, [#{payload := Payload} | _]} ->
+            render_etsi(Format, MessageId, safe_decode(Payload));
+        _ ->
+            etsi_error(~"Message not found.")
+    end;
+etsi_content(_Format, _MessageId) ->
+    ~"".
+
+is_message_id(<<A:8/binary, $-, B:4/binary, $-, C:4/binary, $-, D:4/binary, $-, E:12/binary>>) ->
+    [] =:=
+        [
+            Digit
+         || <<Digit>> <= <<A/binary, B/binary, C/binary, D/binary, E/binary>>,
+            not is_hex_digit(Digit)
+        ];
+is_message_id(_) ->
+    false.
+
+is_hex_digit(Digit) ->
+    (Digit >= $0 andalso Digit =< $9) orelse
+        (Digit >= $a andalso Digit =< $f) orelse
+        (Digit >= $A andalso Digit =< $F).
 
 %% --- published by the message API on each intercepted message -------------
 
